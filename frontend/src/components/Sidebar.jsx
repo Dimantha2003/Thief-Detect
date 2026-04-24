@@ -1,30 +1,69 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Users, Camera, Bell } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Map,
+  Camera,
+  Bell,
+  Shield,
+  X,
+} from "lucide-react";
 
-function Sidebar() {
+const navItems = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { label: "Criminal Database", icon: Users, path: "/criminals" },
+  { label: "Map View", icon: Map, path: "/map" },
+  { label: "Cameras", icon: Camera, path: "/cameras" },
+  { label: "Alert History", icon: Bell, path: "/alerts" },
+];
+
+export default function Sidebar({ isOpen, onClose }) {
   return (
-    <aside className="sidebar">
-      <h2 className="logo">Thief Detect</h2>
+    <>
+      <div
+        className={`sidebar-overlay ${isOpen ? "show" : ""}`}
+        onClick={onClose}
+      />
 
-      <nav className="nav-menu">
-        <NavLink to="/" end>
-          <LayoutDashboard size={18} /> Dashboard
-        </NavLink>
+      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+        <div className="sidebar-header">
+          <div className="logo-box">
+            <Shield size={20} />
+          </div>
 
-        <NavLink to="/criminals">
-          <Users size={18} /> Criminal Database
-        </NavLink>
+          <div>
+            <h2>SENTINEL</h2>
+            <p>DETECTION SYSTEM</p>
+          </div>
 
-        <NavLink to="/cameras">
-          <Camera size={18} /> Cameras
-        </NavLink>
+          <button className="sidebar-close" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
 
-        <NavLink to="/alerts">
-          <Bell size={18} /> Alert History
-        </NavLink>
-      </nav>
-    </aside>
+        <nav className="sidebar-nav">
+          <span className="nav-title">NAVIGATION</span>
+
+          {navItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+                onClick={onClose}
+              >
+                <Icon size={17} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }
-
-export default Sidebar;
