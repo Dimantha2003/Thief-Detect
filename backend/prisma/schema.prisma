@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  POLICE_OFFICER
+  INVESTIGATOR
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum CriminalStatus {
+  WANTED
+  ARRESTED
+  RELEASED
+  UNDER_INVESTIGATION
+  INACTIVE
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum CameraStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  OFFLINE
+}
+
+enum AlertStatus {
+  NEW
+  REVIEWING
+  CONFIRMED
+  FALSE_POSITIVE
+  RESOLVED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+model User {
+  id           String     @id @default(uuid())
+  fullName     String
+  email        String     @unique
+  passwordHash String
+  phone        String?
+  role         UserRole   @default(POLICE_OFFICER)
+  status       UserStatus @default(ACTIVE)
+
+  policeStationId String?
+  policeStation   PoliceStation? @relation(fields: [policeStationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdCriminals Criminal[] @relation("CreatedCriminals")
+  alertsReviewed   Alert[]    @relation("ReviewedAlerts")
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model PoliceStation {
+  id          String  @id @default(uuid())
+  name        String
+  city        String?
+  district    String?
+  address     String?
+  phone       String?
+  email       String?
+
+  users   User[]
+  cameras Camera[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("police_stations")
+}
+
+model Criminal {
+  id              String         @id @default(uuid())
+  criminalCode    String         @unique
+  fullName        String
+  nic             String?        @unique
+  passportNumber  String?
+  gender          Gender         @default(UNKNOWN)
+  dateOfBirth     DateTime?
+  age             Int?
+  nationality     String?
+  address         String?
+  crimeType       String
+  description     String?
+  riskLevel       RiskLevel      @default(MEDIUM)
+  status          CriminalStatus @default(WANTED)
+
+  createdById String?
+  createdBy   User? @relation("CreatedCriminals", fields: [createdById], references: [id])
+
+  photos     CriminalPhoto[]
+  embeddings FaceEmbedding[]
+  alerts     Alert[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fullName])
+  @@index([criminalCode])
+  @@index([riskLevel])
+  @@index([status])
+  @@map("criminals")
+}
+
+model CriminalPhoto {
+  id          String  @id @default(uuid())
+  criminalId  String
+  imageUrl    String
+  fileName    String?
+  isPrimary   Boolean @default(false)
+
+  criminal Criminal @relation(fields: [criminalId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("criminal_photos")
+}
+
+model FaceEmbedding {
+  id         String @id @default(uuid())
+  criminalId String
+  vector     Json
+  modelName  String @default("face_recognition_dlib")
+  dimension  Int    @default(128)
+
+  criminal Criminal @relation(fields: [criminalId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("face_embeddings")
+}
+
+model Camera {
+  id              String       @id @default(uuid())
+  name            String
+  location        String
+  rtspUrl         String?
+  ipAddress       String?
+  status          CameraStatus @default(INACTIVE)
+  latitude        Float?
+  longitude       Float?
+
+  policeStationId String?
+  policeStation   PoliceStation? @relation(fields: [policeStationId], references: [id])
+
+  alerts Alert[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("cameras")
+}
+
+model Alert {
+  id              String      @id @default(uuid())
+  alertCode       String      @unique
+  criminalId      String
+  cameraId        String
+  confidenceScore Float
+  status          AlertStatus @default(NEW)
+  snapshotUrl     String?
+  location        String?
+  notes           String?
+
+  detectedAt DateTime @default(now())
+
+  reviewedById String?
+  reviewedBy   User? @relation("ReviewedAlerts", fields: [reviewedById], references: [id])
+
+  criminal Criminal @relation(fields: [criminalId], references: [id])
+  camera   Camera   @relation(fields: [cameraId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([criminalId])
+  @@index([cameraId])
+  @@index([status])
+  @@index([detectedAt])
+  @@map("alerts")
+}
+
+model AuditLog {
+  id        String  @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
