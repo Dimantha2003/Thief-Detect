@@ -1,6 +1,9 @@
 import { Bell, Menu, Circle } from "lucide-react";
+import { useAuth } from "../context/AuthContext"; // Import your auth context
 
 export default function Topbar({ onMenuClick }) {
+  const { user } = useAuth(); // Grab the logged-in user
+
   return (
     <header className="topbar">
       <div className="topbar-left">
@@ -20,7 +23,10 @@ export default function Topbar({ onMenuClick }) {
           <span>8</span>
         </button>
 
-        <p className="time-text">10:26:54 AM</p>
+        {/* Added User Name Here */}
+        <div className="topbar-user">
+          <span>{user?.fullName || "User"}</span>
+        </div>
       </div>
     </header>
   );

@@ -27,6 +27,9 @@ body {
   top: 0;
   z-index: 50;
   transition: transform 0.3s ease;
+  /* Added flex properties to push footer to bottom */
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
@@ -72,6 +75,9 @@ body {
 
 .sidebar-nav {
   padding: 22px 10px;
+  /* Added flex and overflow to allow footer to stay at bottom */
+  flex: 1;
+  overflow-y: auto;
 }
 
 .nav-title {
@@ -100,6 +106,40 @@ body {
 .nav-link.active {
   background: #06283a;
   color: #38bdf8;
+}
+
+/* --- Added Sidebar Footer / Logout Styles --- */
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #1f2937;
+  margin-top: auto;
+}
+
+.sidebar-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.sidebar-logout svg {
+  color: inherit;
 }
 
 /* Topbar */

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react"; // Removed ShieldCheck
 import { useAuth } from "../context/AuthContext";
 import "../styles/login.css";
 
@@ -62,7 +62,12 @@ export default function Login() {
       <div className="login-left-panel">
         <div className="brand-block">
           <div className="brand-icon">
-            <ShieldCheck size={34} />
+            {/* Replaced ShieldCheck with profile.png */}
+            <img 
+              src="/profile.png" 
+              alt="Logo" 
+              style={{ width: "34px", height: "34px", objectFit: "cover", borderRadius: "6px" }} 
+            />
           </div>
           <div>
             <h1>Thief Detect</h1>
@@ -143,15 +148,6 @@ export default function Login() {
             {submitting ? "Signing in..." : "Sign In"}
           </button>
 
-          <div className="demo-login-box">
-            <h4>Demo Accounts</h4>
-            <p>
-              <strong>Super Admin:</strong> superadmin@thiefdetect.lk
-            </p>
-            <p>
-              <strong>Password:</strong> Password@123
-            </p>
-          </div>
         </form>
       </div>
     </section>
