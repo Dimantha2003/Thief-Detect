@@ -286,7 +286,7 @@ model Alert {
   id              String      @id @default(uuid())
   alertCode       String      @unique
   criminalId      String
-  cameraId        String
+  cameraId String?
   confidenceScore Float
   status          AlertStatus @default(NEW)
 
@@ -305,7 +305,7 @@ model Alert {
   assignedTo   User? @relation("AssignedAlerts", fields: [assignedToId], references: [id], onDelete: SetNull)
 
   criminal Criminal @relation(fields: [criminalId], references: [id], onDelete: Restrict)
-  camera   Camera   @relation(fields: [cameraId], references: [id], onDelete: Restrict)
+camera Camera? @relation(fields: [cameraId], references: [id], onDelete: SetNull)
 
   evidence      AlertEvidence[]
   notifications Notification[]

@@ -4,102 +4,225 @@ import {
   Clock,
   CheckCircle,
 } from "lucide-react";
+
+import { useEffect, useState } from "react";
+
+import { alertApi } from "../services/alertService";
+
 import "../styles/alertHistory.css";
 
-const alerts = [
-  {
-    name: "Ahmed Khan",
-    id: "ALT-001",
-    location: "Main Boulevard - Sector 7",
-    camera: "CAM-003",
-    date: "3/3/2026",
-    time: "2:23:00 PM",
-    confidence: "94.2%",
-    status: "new",
-    type: "danger",
-  },
-  {
-    name: "Rashid Ali",
-    id: "ALT-002",
-    location: "Industrial Zone Gate",
-    camera: "CAM-007",
-    date: "3/3/2026",
-    time: "1:45:00 PM",
-    confidence: "87.8%",
-    status: "dispatched",
-    type: "signal",
-  },
-  {
-    name: "Usman Tariq",
-    id: "ALT-003",
-    location: "Highway Toll Plaza",
-    camera: "CAM-012",
-    date: "3/3/2026",
-    time: "12:10:00 PM",
-    confidence: "91.5%",
-    status: "acknowledged",
-    type: "warning",
-  },
-  {
-    name: "Bilal Hussain",
-    id: "ALT-004",
-    location: "Commercial Area Block C",
-    camera: "CAM-005",
-    date: "3/2/2026",
-    time: "10:30:00 PM",
-    confidence: "78.3%",
-    status: "resolved",
-    type: "success",
-  },
-];
-
 function AlertIcon({ type }) {
-  if (type === "signal") return <Radio size={20} />;
-  if (type === "warning") return <Clock size={20} />;
-  if (type === "success") return <CheckCircle size={20} />;
+  if (type === "signal") {
+    return <Radio size={20} />;
+  }
+
+  if (type === "warning") {
+    return <Clock size={20} />;
+  }
+
+  if (type === "success") {
+    return <CheckCircle size={20} />;
+  }
+
   return <TriangleAlert size={20} />;
 }
 
 export default function AlertHistory() {
+  const [alerts, setAlerts] = useState([]);
+
+  // ==========================================
+  // LOAD ALERTS
+  // ==========================================
+  const loadAlerts = async () => {
+    try {
+      const response = await alertApi.getAll();
+
+      if (response.success) {
+        setAlerts(response.data);
+      }
+    } catch (error) {
+      console.error(
+        "Failed to load alerts",
+        error
+      );
+    }
+  };
+
+  // ==========================================
+  // AUTO REFRESH
+  // ==========================================
+  useEffect(() => {
+    loadAlerts();
+
+    // REFRESH EVERY 5 SECONDS
+    const interval = setInterval(() => {
+      loadAlerts();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // ==========================================
+  // STATUS → UI TYPE
+  // ==========================================
+  const getAlertType = (status) => {
+    if (status === "NEW") {
+      return "danger";
+    }
+
+    if (status === "REVIEWING") {
+      return "signal";
+    }
+
+    if (status === "CONFIRMED") {
+      return "warning";
+    }
+
+    return "success";
+  };
+
+  // ==========================================
+  // STATUS CLASS
+  // ==========================================
+  const getStatusClass = (status) => {
+    return status.toLowerCase();
+  };
+
   return (
     <section className="alert-history-page">
       <div className="alert-history-header">
         <h1>Alert History</h1>
-        <p>Detection alerts and notification log</p>
+
+        <p>
+          Real-time criminal detection
+          logs and AI recognition alerts
+        </p>
       </div>
 
       <div className="alert-history-list">
-        {alerts.map((alert) => (
-          <article className="history-card" key={alert.id}>
-            <div className={`history-icon ${alert.type}`}>
-              <AlertIcon type={alert.type} />
-            </div>
+        {alerts.length === 0 ? (
+          <div className="empty-alerts">
+            <TriangleAlert size={40} />
 
-            <div className="history-content">
-              <div className="history-title">
-                <h3>{alert.name}</h3>
-                <span>{alert.id}</span>
-              </div>
+            <h3>No alerts yet</h3>
 
-              <p>
-                Detected at <strong>{alert.location}</strong> via camera{" "}
-                <strong>{alert.camera}</strong>
-              </p>
-            </div>
+            <p>
+              AI detections will appear here
+              automatically
+            </p>
+          </div>
+        ) : (
+          alerts.map((alert) => {
+            const criminal =
+              alert.criminal;
 
-            <div className="history-meta">
-              <span className={`history-status ${alert.status}`}>
-                {alert.status}
-              </span>
+            const image =
+              criminal?.photos?.[0]
+                ?.imageUrl
+                ? `http://localhost:5000${criminal.photos[0].imageUrl}`
+                : "https://i.pravatar.cc/100";
 
-              <small>
-                {alert.date}, {alert.time}
-              </small>
+            const detectedDate =
+              new Date(alert.detectedAt);
 
-              <strong>{alert.confidence} confidence</strong>
-            </div>
-          </article>
-        ))}
+            return (
+              <article
+                className="history-card"
+                key={alert.id}
+              >
+                {/* ICON */}
+
+                <div
+                  className={`history-icon ${getAlertType(alert.status)}`}
+                >
+                  <AlertIcon
+                    type={getAlertType(
+                      alert.status
+                    )}
+                  />
+                </div>
+
+                {/* CRIMINAL IMAGE */}
+
+                <img
+                  className="history-avatar"
+                  src={image}
+                  alt={
+                    criminal?.fullName
+                  }
+                />
+
+                {/* CONTENT */}
+
+                <div className="history-content">
+                  <div className="history-title">
+                    <h3>
+                      {criminal?.fullName ||
+                        "Unknown Criminal"}
+                    </h3>
+
+                    <span>
+                      {
+                        alert.alertCode
+                      }
+                    </span>
+                  </div>
+
+                  <p>
+                    Detected at{" "}
+                    <strong>
+                      {alert.location ||
+                        "Unknown Location"}
+                    </strong>
+
+                    {" "}via AI surveillance
+                  </p>
+
+                  <div className="history-extra">
+                    <span>
+                      Crime:
+                      {" "}
+                      {
+                        criminal?.crimeType
+                      }
+                    </span>
+
+                    <span>
+                      Risk:
+                      {" "}
+                      {
+                        criminal?.riskLevel
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                {/* META */}
+
+                <div className="history-meta">
+                  <span
+                    className={`history-status ${getStatusClass(alert.status)}`}
+                  >
+                    {alert.status}
+                  </span>
+
+                  <small>
+                    {detectedDate.toLocaleDateString()}
+                    {" • "}
+                    {detectedDate.toLocaleTimeString()}
+                  </small>
+
+                  <strong>
+                    {
+                      alert.confidenceScore
+                    }
+                    % confidence
+                  </strong>
+                </div>
+              </article>
+            );
+          })
+        )}
       </div>
     </section>
   );
