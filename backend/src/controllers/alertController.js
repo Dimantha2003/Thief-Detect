@@ -4,6 +4,7 @@ import os from "os";
 import { exec } from "child_process";
 
 import prisma from "../config/prisma.js";
+import { sendAlertEmail } from "../services/emailService.js";
 
 const PYTHON_EXEC = `"C:\\Users\\Dimatha Sheshan\\OneDrive\\Desktop\\pola\\pola\\.venv\\Scripts\\python.exe"`;
 
@@ -120,9 +121,6 @@ export const createAlert = async (
           `💥 FACE RECOGNIZED BY AI: ${aiResult.name}`
         );
 
-        // Example:
-        // 65c3cf5f-152b-4c9c-ad8e-15bedaf30316_photo1
-
         const criminalId =
           aiResult.name.split("_photo")[0];
 
@@ -196,6 +194,32 @@ export const createAlert = async (
           console.log(
             `🚨 ALERT CREATED: ${newAlert.alertCode}`
           );
+
+          // ==========================================
+          // 🚀 SEND EMAILS TO ACTIVE SYSTEM USERS
+          // ==========================================
+          try {
+            const systemUsers = await prisma.user.findMany({
+              where: { status: "ACTIVE" },
+              select: { email: true }
+            });
+
+            if (systemUsers.length > 0) {
+              console.log(`✉️ Found ${systemUsers.length} active monitors. Dispatching alert notifications...`);
+              
+              // Map individual transmission routines so they compile concurrently
+              systemUsers.forEach((user) => {
+                if (user.email) {
+                  sendAlertEmail(user.email, newAlert, criminalData, base64Data);
+                }
+              });
+            } else {
+              console.log("⚠️ No active users found in database to notify.");
+            }
+          } catch (dbUserError) {
+            console.error("⚠️ Failed to look up target notification recipients:", dbUserError);
+          }
+
         }
 
         // ==========================================
